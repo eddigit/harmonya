@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { AudioFile, ProcessingStatus } from '../types';
+import { formatTime, getObjectValues } from '../utils/polyfills';
 
 interface AudioUploadProps {
   onFileUpload: (file: AudioFile) => void;
@@ -118,11 +119,7 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+
 
   return (
     <Box>
@@ -203,7 +200,7 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
           Formats acceptés :
         </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
-          {Object.values(ACCEPTED_FORMATS).flat().map((format) => (
+          {getObjectValues(ACCEPTED_FORMATS).flat().map((format: string) => (
             <Chip 
               key={format} 
               label={format.toUpperCase()} 

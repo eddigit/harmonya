@@ -36,6 +36,7 @@ import {
 import { motion } from 'framer-motion';
 import WaveSurfer from 'wavesurfer.js';
 import { AudioFile, TransformationSettings, ProcessingStatus, BrainwaveType } from '../types';
+import { formatTime } from '../utils/polyfills';
 
 interface AudioProcessorProps {
   audioFile: AudioFile | null;
@@ -200,11 +201,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
     });
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+
 
   const handleProcessTransformation = async () => {
     if (!audioFile) return;
@@ -321,12 +318,12 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
 
       pollStatus();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors du traitement:', error);
       onProcessingStatusChange({
         status: 'error',
         progress: 0,
-        message: `Erreur: ${error.message}`
+        message: `Erreur: ${error?.message || 'Erreur inconnue'}`
       });
     }
   };
