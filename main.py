@@ -18,11 +18,16 @@ app = FastAPI(title="Harmonia Audio Processing API", version="1.0.0")
 # Configuration CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],  # Permettre toutes les origines pour le déploiement
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Endpoint de santé pour Railway
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "Harmonia Audio Processing API"}
 
 # Modèles Pydantic
 class AudioAnalysisResponse(BaseModel):
