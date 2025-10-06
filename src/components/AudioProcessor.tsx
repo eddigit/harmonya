@@ -55,7 +55,7 @@ interface TabPanelProps {
 }
 
 const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
-  <div hidden={value !== index}>
+  <div hidden={value !== index} style={{ backgroundColor: '#25282F' }}>
     {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
   </div>
 );
@@ -402,7 +402,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
                 <Typography variant="subtitle1" gutterBottom color="primary">
                   🎵 Original
                 </Typography>
-                <div ref={originalWaveformRef} style={{ marginBottom: '16px' }} />
+                <div ref={originalWaveformRef} style={{ marginBottom: '16px', backgroundColor: '#25282F', borderRadius: '4px', padding: '8px' }} />
                 <Button
                   variant={currentPlayer === 'original' ? 'contained' : 'outlined'}
                   onClick={() => handlePlayerSwitch('original')}
@@ -428,7 +428,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
                 <Typography variant="subtitle1" gutterBottom color="secondary">
                   ✨ Transformé
                 </Typography>
-                <div ref={transformedWaveformRef} style={{ marginBottom: '16px' }} />
+                <div ref={transformedWaveformRef} style={{ marginBottom: '16px', backgroundColor: '#25282F', borderRadius: '4px', padding: '8px' }} />
                 <Button
                   variant={currentPlayer === 'transformed' ? 'contained' : 'outlined'}
                   color="secondary"

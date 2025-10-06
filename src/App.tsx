@@ -79,7 +79,17 @@ function App() {
           />
         );
       default:
-        return <div>Export en cours de développement...</div>;
+        return (
+          <div style={{ 
+            backgroundColor: '#25282F', 
+            color: '#FFFFFF', 
+            padding: '20px', 
+            borderRadius: '8px',
+            textAlign: 'center'
+          }}>
+            Export en cours de développement...
+          </div>
+        );
     }
   };
 
@@ -87,8 +97,8 @@ function App() {
     <Box
       sx={{
         minHeight: '100vh',
-        background: '#0a0a0a',
-        py: 4
+        background: '#25282F',
+        py: 4,
       }}
     >
       <Container maxWidth="lg">
@@ -103,10 +113,10 @@ function App() {
               variant="h1"
               component="h1"
               sx={{
-                color: '#ffffff',
+                color: '#FFFFFF',
                 fontWeight: 300,
                 mb: 2,
-                letterSpacing: '0.02em'
+                letterSpacing: '0.5px'
               }}
             >
               Harmonya
@@ -115,7 +125,7 @@ function App() {
               variant="h3"
               component="h2"
               sx={{
-                color: '#94a3b8',
+                color: '#CCCCCC',
                 fontWeight: 300,
                 mb: 4
               }}
@@ -133,11 +143,11 @@ function App() {
         >
           <Box
             sx={{
-              backgroundColor: '#1a1a1a',
+              background: '#2F353B',
               borderRadius: 2,
+              border: '1px solid #3A3F45',
               p: 3,
-              mb: 4,
-              border: '1px solid #2d2d2d'
+              mb: 3,
             }}
           >
             <Stepper activeStep={activeStep} alternativeLabel>
@@ -161,17 +171,62 @@ function App() {
           >
             <Box
               sx={{
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#2F353B',
                 borderRadius: 2,
                 p: 4,
                 minHeight: '500px',
-                border: '1px solid #2d2d2d'
+                border: '1px solid #3A3F45'
               }}
             >
               {renderStepContent(activeStep)}
             </Box>
           </motion.div>
         </AnimatePresence>
+
+        {/* Footer */}
+        <Box
+          sx={{
+            mt: 6,
+            pt: 3,
+            borderTop: '1px solid #3A3F45',
+            textAlign: 'center',
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#CCCCCC',
+              fontSize: '0.875rem',
+              fontWeight: 300,
+            }}
+          >
+            Concepteur : Gilles KORZEC • {new Date().getFullYear()} • Version 1.0.0 • Sociétés partenaires : 
+            <a 
+              href="https://vybbi.app/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ 
+                color: '#4CA7D8', 
+                textDecoration: 'none',
+                marginLeft: '4px'
+              }}
+            >
+              Vybbi.app
+            </a>
+            {' • '}
+            <a 
+              href="https://www.blazon19.com/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ 
+                color: '#4CA7D8', 
+                textDecoration: 'none'
+              }}
+            >
+              BLAZON XIX
+            </a>
+          </Typography>
+        </Box>
       </Container>
     </Box>
   );

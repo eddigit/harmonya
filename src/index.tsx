@@ -9,24 +9,20 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#ffffff', // Blanc pur Tesla
-      light: '#f8fafc',
-      dark: '#e2e8f0',
+      main: '#4CA7D8', // Couleur background bouton
     },
     secondary: {
-      main: '#64748b', // Gris moderne
-      light: '#94a3b8',
-      dark: '#475569',
+      main: '#FFFFFF', // Texte blanc
     },
     background: {
-      default: '#0a0a0a', // Noir profond Tesla
-      paper: '#1a1a1a', // Gris très sombre pour les cartes
+      default: '#25282F', // Background général
+      paper: '#2F353B', // Background des widgets et éléments
     },
     text: {
-      primary: '#ffffff', // Blanc pur
-      secondary: '#94a3b8', // Gris clair
+      primary: '#FFFFFF', // Couleur texte blanc
+      secondary: '#CCCCCC', // Texte secondaire plus clair
     },
-    divider: '#2d2d2d', // Gris foncé pour les séparateurs
+    divider: '#3A3F45', // Bordures légèrement plus claires
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -57,13 +53,20 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
+          borderRadius: 8,
           textTransform: 'none',
           fontWeight: 500,
-          borderRadius: 6,
           padding: '12px 24px',
           boxShadow: 'none',
           '&:hover': {
             boxShadow: 'none',
+          },
+        },
+        contained: {
+          background: '#4CA7D8',
+          color: '#FFFFFF',
+          '&:hover': {
+            background: '#3A96C7',
           },
         },
       },
@@ -71,10 +74,9 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: 'none',
           borderRadius: 8,
-          border: '1px solid #2d2d2d',
-          background: '#1a1a1a',
+          border: '1px solid #3A3F45',
+          background: '#2F353B',
         },
       },
     },
