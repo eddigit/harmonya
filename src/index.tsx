@@ -4,28 +4,29 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import App from './App';
 
-// Thème apaisant avec palette douce (bleus/verts/violets pastel)
+// Thème dark apaisant avec palette sombre élégante
 const theme = createTheme({
   palette: {
-    mode: 'light',
+    mode: 'dark',
     primary: {
-      main: '#6366f1', // Indigo doux
-      light: '#a5b4fc',
-      dark: '#4338ca',
+      main: '#8b5cf6', // Violet lumineux
+      light: '#a78bfa',
+      dark: '#7c3aed',
     },
     secondary: {
-      main: '#10b981', // Vert émeraude
-      light: '#6ee7b7',
-      dark: '#047857',
+      main: '#06b6d4', // Cyan moderne
+      light: '#67e8f9',
+      dark: '#0891b2',
     },
     background: {
-      default: '#f8fafc',
-      paper: '#ffffff',
+      default: '#0f0f23', // Bleu très sombre
+      paper: '#1a1a2e', // Bleu sombre pour les cartes
     },
     text: {
-      primary: '#1e293b',
-      secondary: '#64748b',
+      primary: '#e2e8f0', // Blanc cassé
+      secondary: '#94a3b8', // Gris clair
     },
+    divider: '#334155', // Gris foncé pour les séparateurs
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -60,14 +61,29 @@ const theme = createTheme({
           fontWeight: 500,
           borderRadius: 8,
           padding: '10px 24px',
+          boxShadow: '0 4px 14px 0 rgb(139 92 246 / 0.2)',
+          '&:hover': {
+            boxShadow: '0 6px 20px 0 rgb(139 92 246 / 0.3)',
+            transform: 'translateY(-1px)',
+          },
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-          borderRadius: 12,
+          boxShadow: '0 8px 32px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(255 255 255 / 0.05)',
+          borderRadius: 16,
+          border: '1px solid rgba(139, 92, 246, 0.1)',
+          backdropFilter: 'blur(10px)',
+          background: 'linear-gradient(135deg, rgba(26, 26, 46, 0.8) 0%, rgba(26, 26, 46, 0.95) 100%)',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
         },
       },
     },
