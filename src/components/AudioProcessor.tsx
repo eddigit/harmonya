@@ -187,11 +187,13 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
 
     return () => {
       try {
-        if (originalWaveSurferRef.current && !originalWaveSurferRef.current.isDestroyed) {
+        if (originalWaveSurferRef.current) {
           originalWaveSurferRef.current.destroy();
+          originalWaveSurferRef.current = null;
         }
-        if (transformedWaveSurferRef.current && !transformedWaveSurferRef.current.isDestroyed) {
+        if (transformedWaveSurferRef.current) {
           transformedWaveSurferRef.current.destroy();
+          transformedWaveSurferRef.current = null;
         }
       } catch (error) {
         console.warn('Erreur lors de la destruction de WaveSurfer:', error);
