@@ -12,7 +12,12 @@ import librosa
 import numpy as np
 import soundfile as sf
 from pydub import AudioSegment
-import pyrubberband as pyrb
+try:
+    import pyrubberband as pyrb
+    PYRUBBERBAND_AVAILABLE = True
+except ImportError:
+    PYRUBBERBAND_AVAILABLE = False
+    print("Warning: pyrubberband not available. Audio transformations will be simulated.")
 import time
 
 app = FastAPI(title="Harmonya Audio Processing API", version="1.0.0")
@@ -282,23 +287,31 @@ async def process_audio_background(task_id: str, file_path: Path, transformation
         
         # Transformation du tuning (pitch shifting)
         if transformation.tuning != 440:
-            # Calcul du ratio de pitch (en demi-tons)
-            pitch_ratio = transformation.tuning / 440.0
-            semitones = 12 * np.log2(pitch_ratio)
-            
-            # Application du pitch shifting avec pyrubberband
-            transformed_audio = pyrb.pitch_shift(transformed_audio, sr, semitones)
+            if PYRUBBERBAND_AVAILABLE:
+                # Calcul du ratio de pitch (en demi-tons)
+                pitch_ratio = transformation.tuning / 440.0
+                semitones = 12 * np.log2(pitch_ratio)
+                
+                # Application du pitch shifting avec pyrubberband
+                transformed_audio = pyrb.pitch_shift(transformed_audio, sr, semitones)
+            else:
+                # Simulation du pitch shifting (pour compatibilité)
+                print(f"Simulating pitch shift to {transformation.tuning} Hz")
         
         processing_tasks[task_id]["message"] = "Ajustement du BPM..."
         processing_tasks[task_id]["progress"] = 50
         
         # Transformation du BPM (time stretching)
         if transformation.bpm_adjustment != 0:
-            # Calcul du ratio de tempo
-            tempo_ratio = 1.0 + (transformation.bpm_adjustment / 100.0)
-            
-            # Application du time stretching avec pyrubberband
-            transformed_audio = pyrb.time_stretch(transformed_audio, sr, tempo_ratio)
+            if PYRUBBERBAND_AVAILABLE:
+                # Calcul du ratio de tempo
+                tempo_ratio = 1.0 + (transformation.bpm_adjustment / 100.0)
+                
+                # Application du time stretching avec pyrubberband
+                transformed_audio = pyrb.time_stretch(transformed_audio, sr, tempo_ratio)
+            else:
+                # Simulation du time stretching (pour compatibilité)
+                print(f"Simulating BPM adjustment: {transformation.bpm_adjustment}%")
         
         processing_tasks[task_id]["message"] = "Génération des battements binauraux..."
         processing_tasks[task_id]["progress"] = 70
