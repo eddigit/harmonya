@@ -109,18 +109,38 @@ function App() {
           transition={{ duration: 0.6 }}
         >
           <Box textAlign="center" mb={4}>
-            <Typography
-              variant="h1"
-              component="h1"
-              sx={{
-                color: '#FFFFFF',
-                fontWeight: 300,
-                mb: 2,
-                letterSpacing: '0.5px'
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                gap: 2,
+                mb: 2
               }}
             >
-              Harmonya
-            </Typography>
+              <Box
+                component="img"
+                src="/logo.svg"
+                alt="Harmonya Logo"
+                sx={{
+                  width: 48,
+                  height: 48,
+                  filter: 'drop-shadow(0 2px 8px rgba(76, 167, 216, 0.3))'
+                }}
+              />
+              <Typography
+                variant="h1"
+                component="h1"
+                sx={{
+                  color: '#FFFFFF',
+                  fontWeight: 300,
+                  letterSpacing: '0.5px',
+                  margin: 0
+                }}
+              >
+                Harmonya
+              </Typography>
+            </Box>
             <Typography
               variant="h3"
               component="h2"

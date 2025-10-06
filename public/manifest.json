@@ -3,6 +3,11 @@
   "name": "Harmonya - Fréquences Thérapeutiques",
   "icons": [
     {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
       "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
@@ -10,6 +15,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#6366f1",
-  "background_color": "#f8fafc"
+  "theme_color": "#25282F",
+  "background_color": "#25282F"
 }

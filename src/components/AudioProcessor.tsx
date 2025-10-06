@@ -37,6 +37,7 @@ import { motion } from 'framer-motion';
 import WaveSurfer from 'wavesurfer.js';
 import { AudioFile, TransformationSettings, ProcessingStatus, BrainwaveType } from '../types';
 import { formatTime } from '../utils/polyfills';
+import AudioExport from './AudioExport';
 
 interface AudioProcessorProps {
   audioFile: AudioFile | null;
@@ -75,6 +76,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
   const [volume, setVolume] = useState(0.7);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [showExport, setShowExport] = useState(false);
 
   const originalWaveformRef = useRef<HTMLDivElement>(null);
   const transformedWaveformRef = useRef<HTMLDivElement>(null);
@@ -260,6 +262,9 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
 
       const processResult = await processResponse.json();
       const taskId = processResult.task_id;
+      
+      // Sauvegarder le task_id pour l'export
+      localStorage.setItem('currentTaskId', taskId);
 
       // Étape 3: Polling du statut
       const pollStatus = async () => {
@@ -336,7 +341,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
     );
   }
 
-  return (
+  const mainContent = (
     <Box>
       <Typography variant="h4" component="h2" gutterBottom align="center" color="primary">
         🎛️ Transformation Audio
@@ -689,7 +694,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
           
           <Button
             startIcon={<ArrowForwardIcon />}
-            onClick={onNext}
+            onClick={() => setShowExport(true)}
             variant="contained"
             disabled={processingStatus.status !== 'completed'}
           >
@@ -699,6 +704,33 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
       </Box>
     </Box>
   );
+
+  // Afficher le composant d'export si demandé
+  if (showExport) {
+    return (
+      <AudioExport
+        audioFile={audioFile}
+        transformationSettings={transformationSettings}
+        processingStatus={processingStatus}
+        onBack={() => setShowExport(false)}
+        onReset={() => {
+          setShowExport(false);
+          onProcessingStatusChange({ status: 'idle', progress: 0, message: '' });
+          // Réinitialiser les lecteurs audio
+          if (originalWaveSurferRef.current) {
+            originalWaveSurferRef.current.stop();
+          }
+          if (transformedWaveSurferRef.current) {
+            transformedWaveSurferRef.current.stop();
+          }
+          setIsPlaying(false);
+          setCurrentPlayer('original');
+        }}
+      />
+    );
+  }
+
+  return mainContent;
 };
 
 export default AudioProcessor;

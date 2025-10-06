@@ -12,6 +12,7 @@ import librosa
 import numpy as np
 import soundfile as sf
 from pydub import AudioSegment
+import pyrubberband as pyrb
 import time
 
 app = FastAPI(title="Harmonya Audio Processing API", version="1.0.0")
@@ -273,54 +274,72 @@ async def process_audio_background(task_id: str, file_path: Path, transformation
         processing_tasks[task_id]["message"] = "Application des transformations..."
         processing_tasks[task_id]["progress"] = 30
         
-        # Simulation du traitement (pour l'instant)
-        # Dans une version complète, on utiliserait pyrubberband pour les transformations
+        # Copie de l'audio original pour les transformations
+        transformed_audio = y.copy()
         
         processing_tasks[task_id]["message"] = "Ajustement du tuning..."
+        processing_tasks[task_id]["progress"] = 40
+        
+        # Transformation du tuning (pitch shifting)
+        if transformation.tuning != 440:
+            # Calcul du ratio de pitch (en demi-tons)
+            pitch_ratio = transformation.tuning / 440.0
+            semitones = 12 * np.log2(pitch_ratio)
+            
+            # Application du pitch shifting avec pyrubberband
+            transformed_audio = pyrb.pitch_shift(transformed_audio, sr, semitones)
+        
+        processing_tasks[task_id]["message"] = "Ajustement du BPM..."
         processing_tasks[task_id]["progress"] = 50
         
-        # Simulation d'ajustement de tuning
-        if transformation.tuning != 440:
-            # Calcul du ratio de pitch
-            pitch_ratio = transformation.tuning / 440.0
-            # Pour l'instant, on garde l'audio original
-            pass
+        # Transformation du BPM (time stretching)
+        if transformation.bpm_adjustment != 0:
+            # Calcul du ratio de tempo
+            tempo_ratio = 1.0 + (transformation.bpm_adjustment / 100.0)
+            
+            # Application du time stretching avec pyrubberband
+            transformed_audio = pyrb.time_stretch(transformed_audio, sr, tempo_ratio)
         
         processing_tasks[task_id]["message"] = "Génération des battements binauraux..."
         processing_tasks[task_id]["progress"] = 70
         
         # Génération des battements binauraux
         if transformation.binaural_beat.enabled:
-            duration = len(y) / sr
+            duration = len(transformed_audio) / sr
             binaural_audio = generate_binaural_beat(
                 transformation.binaural_beat.type,
                 duration,
                 sr
             )
-            # Mélange avec l'audio original
-            min_length = min(len(y), len(binaural_audio))
-            y = y[:min_length]
+            # Mélange avec l'audio transformé
+            min_length = min(len(transformed_audio), len(binaural_audio))
+            transformed_audio = transformed_audio[:min_length]
             binaural_audio = binaural_audio[:min_length]
-            y = y + (transformation.binaural_beat.volume * binaural_audio)
+            transformed_audio = transformed_audio + (transformation.binaural_beat.volume * binaural_audio)
             
             # Normalisation
-            max_val = np.max(np.abs(y))
+            max_val = np.max(np.abs(transformed_audio))
             if max_val > 1.0:
-                y = y / max_val
+                transformed_audio = transformed_audio / max_val
         
         processing_tasks[task_id]["message"] = "Application de la fréquence thérapeutique..."
         processing_tasks[task_id]["progress"] = 90
         
         # Application de la fréquence thérapeutique
-        duration = len(y) / sr
-        t = np.linspace(0, duration, len(y))
+        duration = len(transformed_audio) / sr
+        t = np.linspace(0, duration, len(transformed_audio))
         therapeutic_wave = 0.1 * np.sin(2 * np.pi * transformation.therapeutic_frequency * t)
-        y = y * (1 + 0.05 * therapeutic_wave)
+        transformed_audio = transformed_audio * (1 + 0.05 * therapeutic_wave)
+        
+        # Normalisation finale
+        max_val = np.max(np.abs(transformed_audio))
+        if max_val > 1.0:
+            transformed_audio = transformed_audio / max_val
         
         # Sauvegarde du fichier traité
         output_filename = f"processed_{task_id}.wav"
         output_path = PROCESSED_DIR / output_filename
-        sf.write(output_path, y, sr)
+        sf.write(output_path, transformed_audio, sr)
         
         processing_tasks[task_id]["status"] = "completed"
         processing_tasks[task_id]["progress"] = 100
@@ -380,9 +399,15 @@ async def export_audio(task_id: str, export_settings: ExportRequest):
         output_path = input_path.parent / f"{input_path.stem}_export.{export_settings.format}"
         
         if export_settings.format == "mp3":
-            audio = AudioSegment.from_wav(input_path)
-            bitrate = "320k" if export_settings.quality == "high" else "192k"
-            audio.export(output_path, format="mp3", bitrate=bitrate)
+            try:
+                audio = AudioSegment.from_wav(input_path)
+                bitrate = "320k" if export_settings.quality == "high" else "192k"
+                audio.export(output_path, format="mp3", bitrate=bitrate)
+            except ImportError:
+                # Fallback if pydub is not available - return WAV instead
+                import shutil
+                output_path = input_path.parent / f"{input_path.stem}_export.wav"
+                shutil.copy2(input_path, output_path)
         else:
             if export_settings.quality == "high":
                 y, sr = librosa.load(input_path, sr=None)
