@@ -14,7 +14,7 @@ import soundfile as sf
 from pydub import AudioSegment
 import time
 
-app = FastAPI(title="Harmonia Audio Processing API", version="1.0.0")
+app = FastAPI(title="Harmonya Audio Processing API", version="1.0.0")
 
 # Servir les fichiers statiques React
 if os.path.exists("dist"):
@@ -33,7 +33,7 @@ app.add_middleware(
 # Endpoint de santé pour Railway
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy", "service": "Harmonia Audio Processing API"}
+    return {"status": "healthy", "service": "Harmonya Audio Processing API"}
 
 # Modèles Pydantic
 class AudioAnalysisResponse(BaseModel):
@@ -182,7 +182,7 @@ async def startup_event():
 
 @app.get("/api/")
 async def root():
-    return {"message": "Harmonia Audio Processing API", "status": "running"}
+    return {"message": "Harmonya Audio Processing API", "status": "running"}
 
 @app.post("/api/upload", response_model=AudioAnalysisResponse)
 async def upload_audio(file: UploadFile = File(...)):
@@ -362,7 +362,7 @@ async def download_processed_audio(task_id: str):
     return FileResponse(
         output_path,
         media_type="audio/wav",
-        filename=f"harmonia_transformed_{task_id}.wav"
+        filename=f"harmonya_transformed_{task_id}.wav"
     )
 
 @app.post("/api/export/{task_id}")
@@ -394,7 +394,7 @@ async def export_audio(task_id: str, export_settings: ExportRequest):
         return FileResponse(
             output_path,
             media_type=f"audio/{export_settings.format}",
-            filename=f"harmonia_export_{task_id}.{export_settings.format}"
+            filename=f"harmonya_export_{task_id}.{export_settings.format}"
         )
         
     except Exception as e:

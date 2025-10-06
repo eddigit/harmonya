@@ -87,7 +87,7 @@ function App() {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%)',
+        background: '#0a0a0a',
         py: 4
       }}
     >
@@ -103,25 +103,21 @@ function App() {
               variant="h1"
               component="h1"
               sx={{
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                fontWeight: 700,
+                color: '#ffffff',
+                fontWeight: 300,
                 mb: 2,
-                textShadow: '0 4px 8px rgba(139, 92, 246, 0.3)'
+                letterSpacing: '0.02em'
               }}
             >
-              🎵 Harmonia
+              Harmonya
             </Typography>
             <Typography
               variant="h3"
               component="h2"
               sx={{
-                color: 'rgba(226, 232, 240, 0.9)',
+                color: '#94a3b8',
                 fontWeight: 300,
-                mb: 4,
-                textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                mb: 4
               }}
             >
               Transformez votre musique avec des fréquences thérapeutiques
@@ -137,13 +133,11 @@ function App() {
         >
           <Box
             sx={{
-              backgroundColor: 'rgba(26, 26, 46, 0.8)',
-              borderRadius: 3,
+              backgroundColor: '#1a1a1a',
+              borderRadius: 2,
               p: 3,
               mb: 4,
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(139, 92, 246, 0.2)',
-              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)'
+              border: '1px solid #2d2d2d'
             }}
           >
             <Stepper activeStep={activeStep} alternativeLabel>
@@ -167,13 +161,11 @@ function App() {
           >
             <Box
               sx={{
-                backgroundColor: 'rgba(26, 26, 46, 0.9)',
-                borderRadius: 3,
+                backgroundColor: '#1a1a1a',
+                borderRadius: 2,
                 p: 4,
-                backdropFilter: 'blur(10px)',
                 minHeight: '500px',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)'
+                border: '1px solid #2d2d2d'
               }}
             >
               {renderStepContent(activeStep)}

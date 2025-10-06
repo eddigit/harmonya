@@ -124,7 +124,7 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
   return (
     <Box>
       <Typography variant="h4" component="h2" gutterBottom align="center" color="primary">
-        📁 Upload de votre fichier audio
+        Upload de votre fichier audio
       </Typography>
       
       <Typography variant="body1" align="center" color="text.secondary" sx={{ mb: 4 }}>
@@ -164,8 +164,8 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
           
           <CloudUploadIcon 
             sx={{ 
-              fontSize: 64, 
-              color: isDragReject ? 'error.main' : 'primary.main',
+              fontSize: 48, 
+              color: isDragReject ? 'error.main' : 'text.secondary',
               mb: 2 
             }} 
           />
