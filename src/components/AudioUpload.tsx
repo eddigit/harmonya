@@ -200,7 +200,7 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
           Formats acceptés :
         </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
-          {getObjectValues(ACCEPTED_FORMATS).flat().map((format: string) => (
+          {[].concat(...getObjectValues(ACCEPTED_FORMATS)).map((format: string) => (
             <Chip 
               key={format} 
               label={format.toUpperCase()} 
