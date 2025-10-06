@@ -217,7 +217,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
       const formData = new FormData();
       formData.append('file', audioFile.file);
 
-      const uploadResponse = await fetch('http://localhost:8000/upload', {
+      const uploadResponse = await fetch('/api/upload', {
         method: 'POST',
         body: formData
       });
@@ -236,7 +236,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
       });
 
       // Étape 2: Démarrer le traitement
-      const processResponse = await fetch(`http://localhost:8000/process/${fileId}`, {
+      const processResponse = await fetch(`/api/process/${fileId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -264,7 +264,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
       // Étape 3: Polling du statut
       const pollStatus = async () => {
         try {
-          const statusResponse = await fetch(`http://localhost:8000/status/${taskId}`);
+          const statusResponse = await fetch(`/api/status/${taskId}`);
           if (!statusResponse.ok) {
             throw new Error('Erreur lors de la récupération du statut');
           }
@@ -281,7 +281,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
             setTimeout(pollStatus, 1000);
           } else if (status.status === 'completed') {
             // Charger l'audio traité dans WaveSurfer
-            const audioUrl = `http://localhost:8000/download/${taskId}`;
+            const audioUrl = `/api/download/${taskId}`;
             if (transformedWaveSurferRef.current) {
               try {
                 await transformedWaveSurferRef.current.load(audioUrl);

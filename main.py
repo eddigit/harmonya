@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, Literal
 import os
@@ -15,6 +16,11 @@ import time
 
 app = FastAPI(title="Harmonia Audio Processing API", version="1.0.0")
 
+# Servir les fichiers statiques React
+if os.path.exists("dist"):
+    app.mount("/static", StaticFiles(directory="dist/assets"), name="static")
+    app.mount("/", StaticFiles(directory="dist", html=True), name="frontend")
+
 # Configuration CORS
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +31,7 @@ app.add_middleware(
 )
 
 # Endpoint de santé pour Railway
-@app.get("/health")
+@app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "service": "Harmonia Audio Processing API"}
 
@@ -174,11 +180,11 @@ async def startup_event():
                         except Exception:
                             pass
 
-@app.get("/")
+@app.get("/api/")
 async def root():
     return {"message": "Harmonia Audio Processing API", "status": "running"}
 
-@app.post("/upload", response_model=AudioAnalysisResponse)
+@app.post("/api/upload", response_model=AudioAnalysisResponse)
 async def upload_audio(file: UploadFile = File(...)):
     """Upload et analyse d'un fichier audio"""
     try:
@@ -218,7 +224,7 @@ async def upload_audio(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload: {str(e)}")
 
-@app.post("/process/{file_id}")
+@app.post("/api/process/{file_id}")
 async def process_audio(
     file_id: str,
     transformation: TransformationRequest,
@@ -325,7 +331,7 @@ async def process_audio_background(task_id: str, file_path: Path, transformation
         processing_tasks[task_id]["status"] = "error"
         processing_tasks[task_id]["message"] = f"Erreur: {str(e)}"
 
-@app.get("/status/{task_id}", response_model=ProcessingStatusResponse)
+@app.get("/api/status/{task_id}", response_model=ProcessingStatusResponse)
 async def get_processing_status(task_id: str):
     """Obtenir le statut d'un traitement"""
     if task_id not in processing_tasks:
@@ -339,7 +345,7 @@ async def get_processing_status(task_id: str):
         error=task.get("error")
     )
 
-@app.get("/download/{task_id}")
+@app.get("/api/download/{task_id}")
 async def download_processed_audio(task_id: str):
     """Télécharger l'audio traité"""
     if task_id not in processing_tasks:
@@ -359,7 +365,7 @@ async def download_processed_audio(task_id: str):
         filename=f"harmonia_transformed_{task_id}.wav"
     )
 
-@app.post("/export/{task_id}")
+@app.post("/api/export/{task_id}")
 async def export_audio(task_id: str, export_settings: ExportRequest):
     """Exporter l'audio dans le format souhaité"""
     if task_id not in processing_tasks:
