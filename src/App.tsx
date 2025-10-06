@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Container, Box, Typography, Stepper, Step, StepLabel } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
+import Header from './components/Header';
 import AudioUpload from './components/AudioUpload';
 import EmotionalQuestionnaire from './components/EmotionalQuestionnaire';
 import AudioProcessor from './components/AudioProcessor';
+import FrequencyGuide from './components/FrequencyGuide';
 import { AudioFile, TransformationSettings, ProcessingStatus } from './types';
 
 const steps = [
@@ -16,6 +18,7 @@ const steps = [
 function App() {
   const [activeStep, setActiveStep] = useState(0);
   const [audioFile, setAudioFile] = useState<AudioFile | null>(null);
+  const [frequencyGuideOpen, setFrequencyGuideOpen] = useState(false);
   const [transformationSettings, setTransformationSettings] = useState<TransformationSettings>({
     tuning: 432,
     bpmAdjustment: 0,
@@ -98,56 +101,27 @@ function App() {
       sx={{
         minHeight: '100vh',
         background: '#25282F',
-        py: 4,
       }}
     >
-      <Container maxWidth="lg">
-        {/* Header */}
+      {/* Header avec navigation */}
+      <Header onFrequencyGuideOpen={() => setFrequencyGuideOpen(true)} />
+      
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        {/* Sous-titre */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         >
           <Box textAlign="center" mb={4}>
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                gap: 2,
-                mb: 2
-              }}
-            >
-              <Box
-                component="img"
-                src="/logo.svg"
-                alt="Harmonya Logo"
-                sx={{
-                  width: 48,
-                  height: 48,
-                  filter: 'drop-shadow(0 2px 8px rgba(76, 167, 216, 0.3))'
-                }}
-              />
-              <Typography
-                variant="h1"
-                component="h1"
-                sx={{
-                  color: '#FFFFFF',
-                  fontWeight: 300,
-                  letterSpacing: '0.5px',
-                  margin: 0
-                }}
-              >
-                Harmonya
-              </Typography>
-            </Box>
             <Typography
-              variant="h3"
+              variant="h4"
               component="h2"
               sx={{
                 color: '#CCCCCC',
                 fontWeight: 300,
-                mb: 4
+                mb: 4,
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
               }}
             >
               Transformez votre musique avec des fréquences thérapeutiques
@@ -248,6 +222,12 @@ function App() {
           </Typography>
         </Box>
       </Container>
+
+      {/* Guide des fréquences */}
+      <FrequencyGuide 
+        open={frequencyGuideOpen}
+        onClose={() => setFrequencyGuideOpen(false)}
+      />
     </Box>
   );
 }

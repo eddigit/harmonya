@@ -31,13 +31,20 @@ import {
   Waves as WavesIcon,
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  GraphicEq as PreviewIcon,
+  Equalizer as EqualizerIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import WaveSurfer from 'wavesurfer.js';
 import { AudioFile, TransformationSettings, ProcessingStatus, BrainwaveType } from '../types';
 import { formatTime } from '../utils/polyfills';
 import AudioExport from './AudioExport';
+import AudioPreview from './AudioPreview';
+import DetailedProgressBar, { ProgressStep } from './DetailedProgressBar';
+import AudioEqualizer, { EqualizerBand } from './AudioEqualizer';
+import { usePerformanceOptimization } from '../hooks/usePerformanceOptimization';
+import PerformanceMonitor from './PerformanceMonitor';
 
 interface AudioProcessorProps {
   audioFile: AudioFile | null;
@@ -77,6 +84,37 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showExport, setShowExport] = useState(false);
+  
+  // États pour l'égaliseur
+  const [muted, setMuted] = useState(false);
+  const [equalizerEnabled, setEqualizerEnabled] = useState(false);
+  const [equalizerBands, setEqualizerBands] = useState<EqualizerBand[]>([
+    { frequency: 60, gain: 0, label: '60 Hz' },
+    { frequency: 170, gain: 0, label: '170 Hz' },
+    { frequency: 310, gain: 0, label: '310 Hz' },
+    { frequency: 600, gain: 0, label: '600 Hz' },
+    { frequency: 1000, gain: 0, label: '1 kHz' },
+    { frequency: 3000, gain: 0, label: '3 kHz' },
+    { frequency: 6000, gain: 0, label: '6 kHz' },
+    { frequency: 12000, gain: 0, label: '12 kHz' }
+  ]);
+
+  // Hook d'optimisation des performances
+  const {
+    metrics,
+    warnings,
+    isOptimizing,
+    analyzeFile,
+    optimizeMemory,
+    startOptimization,
+    stopOptimization,
+    getRecommendations
+  } = usePerformanceOptimization({
+    maxFileSize: 100, // 100 MB
+    enableMemoryMonitoring: true,
+    enableProgressiveLoading: true,
+    enableChunkedProcessing: true
+  });
 
   const originalWaveformRef = useRef<HTMLDivElement>(null);
   const transformedWaveformRef = useRef<HTMLDivElement>(null);
@@ -86,6 +124,14 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
   // Initialisation des waveforms
   useEffect(() => {
     if (!audioFile) return;
+
+    // Analyser les performances du fichier
+    analyzeFile(audioFile.file);
+    
+    // Démarrer l'optimisation pour les gros fichiers
+    if (audioFile.file.size > 50 * 1024 * 1024) { // > 50MB
+      startOptimization();
+    }
 
     const initWaveSurfer = async () => {
       // WaveSurfer original
@@ -201,6 +247,80 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
         [key]: value
       }
     });
+  };
+
+  // Créer les étapes de progression détaillée
+  const createProgressSteps = (): ProgressStep[] => {
+    const steps: ProgressStep[] = [
+      {
+        id: 'analyze',
+        label: 'Analyse Audio',
+        description: 'Analyse des caractéristiques du fichier audio',
+        status: 'completed'
+      },
+      {
+        id: 'prepare',
+        label: 'Préparation',
+        description: 'Configuration des paramètres de transformation',
+        status: 'completed'
+      },
+      {
+        id: 'frequency',
+        label: 'Ajustement Fréquentiel',
+        description: `Application de la fréquence thérapeutique ${transformationSettings.therapeuticFrequency} Hz`,
+        status: processingStatus.status === 'processing' ? 'active' : 
+               processingStatus.status === 'completed' ? 'completed' : 'pending',
+        progress: processingStatus.status === 'processing' ? Math.min(processingStatus.progress * 0.4, 40) : 
+                 processingStatus.status === 'completed' ? 100 : 0
+      },
+      {
+        id: 'tuning',
+        label: 'Accordage',
+        description: `Ajustement à ${transformationSettings.tuning} Hz`,
+        status: processingStatus.status === 'processing' && processingStatus.progress > 25 ? 'active' :
+               processingStatus.status === 'completed' ? 'completed' : 'pending',
+        progress: processingStatus.status === 'processing' && processingStatus.progress > 25 ? 
+                 Math.min((processingStatus.progress - 25) * 1.33, 100) : 
+                 processingStatus.status === 'completed' ? 100 : 0
+      },
+      {
+        id: 'tempo',
+        label: 'Ajustement Tempo',
+        description: `Modification BPM: ${transformationSettings.bpmAdjustment > 0 ? '+' : ''}${transformationSettings.bpmAdjustment}%`,
+        status: processingStatus.status === 'processing' && processingStatus.progress > 50 ? 'active' :
+               processingStatus.status === 'completed' ? 'completed' : 'pending',
+        progress: processingStatus.status === 'processing' && processingStatus.progress > 50 ? 
+                 Math.min((processingStatus.progress - 50) * 2, 100) : 
+                 processingStatus.status === 'completed' ? 100 : 0
+      }
+    ];
+
+    // Ajouter l'étape des battements binauraux si activée
+    if (transformationSettings.binauralBeat.enabled) {
+      steps.push({
+        id: 'binaural',
+        label: 'Battements Binauraux',
+        description: `Application des ondes ${transformationSettings.binauralBeat.type}`,
+        status: processingStatus.status === 'processing' && processingStatus.progress > 75 ? 'active' :
+               processingStatus.status === 'completed' ? 'completed' : 'pending',
+        progress: processingStatus.status === 'processing' && processingStatus.progress > 75 ? 
+                 Math.min((processingStatus.progress - 75) * 4, 100) : 
+                 processingStatus.status === 'completed' ? 100 : 0
+      });
+    }
+
+    steps.push({
+      id: 'finalize',
+      label: 'Finalisation',
+      description: 'Optimisation et préparation du fichier final',
+      status: processingStatus.status === 'processing' && processingStatus.progress > 90 ? 'active' :
+             processingStatus.status === 'completed' ? 'completed' : 'pending',
+      progress: processingStatus.status === 'processing' && processingStatus.progress > 90 ? 
+               Math.min((processingStatus.progress - 90) * 10, 100) : 
+               processingStatus.status === 'completed' ? 100 : 0
+    });
+
+    return steps;
   };
 
 
@@ -481,6 +601,8 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
         <CardContent>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
+              <Tab icon={<PreviewIcon />} label="Prévisualisation" />
+              <Tab icon={<EqualizerIcon />} label="Égaliseur" />
               <Tab icon={<TuneIcon />} label="Accordage" />
               <Tab icon={<SpeedIcon />} label="Tempo" />
               <Tab icon={<WavesIcon />} label="Battements Binauraux" />
@@ -489,6 +611,39 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
           </Box>
 
           <TabPanel value={tabValue} index={0}>
+            <Typography variant="h6" gutterBottom>
+              🎵 Prévisualisation Audio
+            </Typography>
+            {audioFile && (
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <AudioPreview 
+                    audioFile={audioFile}
+                    title="Audio Original"
+                    subtitle="Écoutez votre fichier audio avant transformation"
+                  />
+                </Grid>
+              </Grid>
+            )}
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={1}>
+            <Typography variant="h6" gutterBottom>
+              🎛️ Contrôles Audio et Égaliseur
+            </Typography>
+            <AudioEqualizer
+              volume={volume * 100}
+              onVolumeChange={(vol) => setVolume(vol / 100)}
+              muted={muted}
+              onMutedChange={setMuted}
+              equalizerBands={equalizerBands}
+              onEqualizerChange={setEqualizerBands}
+              equalizerEnabled={equalizerEnabled}
+              onEqualizerEnabledChange={setEqualizerEnabled}
+            />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={2}>
             <Typography variant="h6" gutterBottom>
               🎼 Accordage et Fréquence Thérapeutique
             </Typography>
@@ -524,7 +679,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
             </Grid>
           </TabPanel>
 
-          <TabPanel value={tabValue} index={1}>
+          <TabPanel value={tabValue} index={3}>
             <Typography variant="h6" gutterBottom>
               ⚡ Ajustement du Tempo
             </Typography>
@@ -554,7 +709,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
             </Grid>
           </TabPanel>
 
-          <TabPanel value={tabValue} index={2}>
+          <TabPanel value={tabValue} index={4}>
             <Typography variant="h6" gutterBottom>
               🧠 Battements Binauraux
             </Typography>
@@ -613,7 +768,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
             </Grid>
           </TabPanel>
 
-          <TabPanel value={tabValue} index={3}>
+          <TabPanel value={tabValue} index={5}>
             <Typography variant="h6" gutterBottom>
               📊 Informations sur la Transformation
             </Typography>
@@ -649,6 +804,18 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
                 </Card>
               </Grid>
             </Grid>
+            
+            {/* Moniteur de performances */}
+            {(metrics.fileSize > 0 || warnings.length > 0) && (
+              <Box sx={{ mt: 3 }}>
+                <PerformanceMonitor
+                  metrics={metrics}
+                  warnings={warnings}
+                  recommendations={getRecommendations()}
+                  onOptimizeMemory={optimizeMemory}
+                />
+              </Box>
+            )}
           </TabPanel>
         </CardContent>
       </Card>
@@ -657,17 +824,12 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
       {processingStatus.status === 'processing' && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              ⚙️ Traitement en cours...
-            </Typography>
-            <LinearProgress 
-              variant="determinate" 
-              value={processingStatus.progress} 
-              sx={{ mb: 2 }}
+            <DetailedProgressBar
+              steps={createProgressSteps()}
+              overallProgress={processingStatus.progress}
+              currentMessage={processingStatus.message}
+              estimatedTimeRemaining={Math.max(0, Math.round((100 - processingStatus.progress) * 0.5))}
             />
-            <Typography variant="body2" color="text.secondary">
-              {processingStatus.message}
-            </Typography>
           </CardContent>
         </Card>
       )}

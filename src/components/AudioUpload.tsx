@@ -20,6 +20,8 @@ import {
 import { motion } from 'framer-motion';
 import { AudioFile, ProcessingStatus } from '../types';
 import { formatTime, getObjectValues } from '../utils/polyfills';
+import { usePerformanceOptimization } from '../hooks/usePerformanceOptimization';
+import PerformanceMonitor from './PerformanceMonitor';
 
 interface AudioUploadProps {
   onFileUpload: (file: AudioFile) => void;
@@ -40,8 +42,24 @@ const MAX_DURATION = 10 * 60; // 10 minutes
 const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatus }) => {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  // Hook d'optimisation des performances
+  const {
+    metrics,
+    warnings,
+    analyzeFile,
+    optimizeMemory,
+    getRecommendations
+  } = usePerformanceOptimization({
+    maxFileSize: 100, // 100 MB
+    enableMemoryMonitoring: true,
+    enableProgressiveLoading: true
+  });
 
   const analyzeAudioFile = async (file: File): Promise<AudioFile> => {
+    // Analyser les performances du fichier
+    const performanceMetrics = analyzeFile(file);
+    
     return new Promise((resolve, reject) => {
       const audio = new Audio();
       const url = URL.createObjectURL(file);
@@ -131,23 +149,28 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
         Glissez-déposez votre fichier audio ou cliquez pour le sélectionner
       </Typography>
 
-      {/* Zone de drop */}
+      {/* Zone de drop améliorée */}
       <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        animate={{
+          borderColor: isDragActive ? '#4CA7D8' : isDragReject ? '#f44336' : '#3A3F45'
+        }}
+        transition={{ duration: 0.2 }}
       >
         <Card
           {...getRootProps()}
           sx={{
-            p: 4,
+            p: 6,
             textAlign: 'center',
             cursor: 'pointer',
-            border: '2px dashed',
+            border: '3px dashed',
             borderColor: isDragActive 
               ? 'primary.main' 
               : isDragReject 
                 ? 'error.main' 
-                : 'grey.300',
+                : '#3A3F45',
+            borderRadius: 4,
             backgroundColor: isDragActive 
               ? 'primary.50' 
               : isDragReject 
@@ -162,34 +185,75 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
         >
           <input {...getInputProps()} />
           
-          <CloudUploadIcon 
-            sx={{ 
-              fontSize: 48, 
-              color: isDragReject ? 'error.main' : 'text.secondary',
-              mb: 2 
-            }} 
-          />
+          <motion.div
+            animate={{ 
+              scale: isDragActive ? 1.1 : 1,
+              rotate: isDragActive ? 5 : 0 
+            }}
+            transition={{ duration: 0.2 }}
+          >
+            <CloudUploadIcon 
+              sx={{ 
+                fontSize: 64, 
+                color: isDragActive ? 'primary.main' : isDragReject ? 'error.main' : '#4CA7D8',
+                mb: 2,
+                filter: 'drop-shadow(0 4px 8px rgba(76, 167, 216, 0.3))'
+              }} 
+            />
+          </motion.div>
           
           {isDragActive ? (
-            <Typography variant="h6" color="primary">
-              Déposez le fichier ici...
-            </Typography>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Typography variant="h5" color="primary" sx={{ fontWeight: 600 }}>
+                🎵 Déposez le fichier ici...
+              </Typography>
+            </motion.div>
           ) : isDragReject ? (
-            <Typography variant="h6" color="error">
-              Format de fichier non supporté
-            </Typography>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Typography variant="h6" color="error">
+                ❌ Format de fichier non supporté
+              </Typography>
+            </motion.div>
           ) : (
-            <>
-              <Typography variant="h6" gutterBottom>
-                Glissez-déposez votre fichier audio ici
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: '#FFFFFF' }}>
+                🎵 Glissez-déposez votre fichier audio ici
               </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                ou
+              <Typography variant="body1" color="text.secondary" gutterBottom sx={{ mb: 3 }}>
+                ou cliquez pour parcourir vos fichiers
               </Typography>
-              <Button variant="contained" sx={{ mt: 1 }}>
-                Parcourir les fichiers
+              <Button 
+                variant="contained" 
+                size="large"
+                sx={{ 
+                  mt: 1,
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #4CA7D8 0%, #5BB3E0 100%)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #3A96C7 0%, #4AA2CF 100%)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 25px rgba(76, 167, 216, 0.4)'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                📁 Parcourir les fichiers
               </Button>
-            </>
+            </motion.div>
           )}
         </Card>
       </motion.div>
@@ -233,6 +297,18 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
         >
           {uploadError}
         </Alert>
+      )}
+
+      {/* Moniteur de performances */}
+      {(metrics.fileSize > 0 || warnings.length > 0) && (
+        <Box sx={{ mt: 4 }}>
+          <PerformanceMonitor
+            metrics={metrics}
+            warnings={warnings}
+            recommendations={getRecommendations()}
+            onOptimizeMemory={optimizeMemory}
+          />
+        </Box>
       )}
 
       {/* Informations sur l'audio processing */}
