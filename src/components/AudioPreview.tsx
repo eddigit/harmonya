@@ -209,7 +209,7 @@ const AudioPreview: React.FC<AudioPreviewProps> = ({
                 }}
               >
                 {isLoading ? (
-                  <LinearProgress size={24} />
+                  <LinearProgress />
                 ) : isPlaying ? (
                   <PauseIcon />
                 ) : (

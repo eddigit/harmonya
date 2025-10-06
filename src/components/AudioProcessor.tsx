@@ -112,8 +112,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
   } = usePerformanceOptimization({
     maxFileSize: 100, // 100 MB
     enableMemoryMonitoring: true,
-    enableProgressiveLoading: true,
-    enableChunkedProcessing: true
+    enableProgressiveLoading: true
   });
 
   const originalWaveformRef = useRef<HTMLDivElement>(null);
@@ -812,6 +811,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
                   metrics={metrics}
                   warnings={warnings}
                   recommendations={getRecommendations()}
+                  isOptimizing={isOptimizing}
                   onOptimizeMemory={optimizeMemory}
                 />
               </Box>
@@ -827,7 +827,7 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
             <DetailedProgressBar
               steps={createProgressSteps()}
               overallProgress={processingStatus.progress}
-              currentMessage={processingStatus.message}
+              currentStep={processingStatus.message || ''}
               estimatedTimeRemaining={Math.max(0, Math.round((100 - processingStatus.progress) * 0.5))}
             />
           </CardContent>

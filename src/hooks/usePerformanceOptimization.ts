@@ -39,7 +39,7 @@ export const usePerformanceOptimization = (
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
   const processingStartTime = useRef<number>(0);
-  const memoryMonitorInterval = useRef<NodeJS.Timeout | null>(null);
+  const memoryMonitorInterval = useRef<number | null>(null);
 
   // Surveillance de la mémoire
   const startMemoryMonitoring = useCallback(() => {

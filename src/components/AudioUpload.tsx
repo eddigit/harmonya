@@ -47,6 +47,7 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
   const {
     metrics,
     warnings,
+    isOptimizing,
     analyzeFile,
     optimizeMemory,
     getRecommendations
@@ -306,6 +307,7 @@ const AudioUpload: React.FC<AudioUploadProps> = ({ onFileUpload, processingStatu
             metrics={metrics}
             warnings={warnings}
             recommendations={getRecommendations()}
+            isOptimizing={isOptimizing}
             onOptimizeMemory={optimizeMemory}
           />
         </Box>
