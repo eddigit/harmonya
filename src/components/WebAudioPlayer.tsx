@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { SimpleEqualizerBand } from './SimpleEqualizer';
 
 interface WebAudioPlayerProps {
@@ -43,6 +43,35 @@ const WebAudioPlayer: React.FC<WebAudioPlayerProps> = ({
   const equalizerNodesRef = useRef<BiquadFilterNode[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Connecter la chaîne audio
+  const connectAudioChain = useCallback(() => {
+    if (!sourceNodeRef.current || !gainNodeRef.current || !audioContextRef.current) return;
+
+    try {
+      // Déconnecter tous les nœuds existants
+      sourceNodeRef.current.disconnect();
+      equalizerNodesRef.current.forEach(filter => filter.disconnect());
+      gainNodeRef.current.disconnect();
+
+      // Reconnecter la chaîne audio
+      let currentNode: AudioNode = sourceNodeRef.current;
+      
+      // TOUJOURS connecter les filtres d'égaliseur dans la chaîne
+      equalizerNodesRef.current.forEach(filter => {
+        currentNode.connect(filter);
+        currentNode = filter;
+      });
+      
+      // Connecter au gain puis à la destination
+      currentNode.connect(gainNodeRef.current);
+      gainNodeRef.current.connect(audioContextRef.current.destination);
+      
+      console.log('🔗 Chaîne audio reconnectée');
+    } catch (error) {
+      console.error('❌ Erreur reconnexion audio:', error);
+    }
+  }, []);
+
   // Initialiser le contexte audio
   const initializeAudioContext = async () => {
     if (!audioRef.current || isInitialized) return;
@@ -80,21 +109,11 @@ const WebAudioPlayer: React.FC<WebAudioPlayerProps> = ({
         return filter;
       });
 
-      // Connecter les nœuds
-      let currentNode: AudioNode = sourceNodeRef.current;
-      
-      if (equalizerEnabled) {
-        equalizerNodesRef.current.forEach(filter => {
-          currentNode.connect(filter);
-          currentNode = filter;
-        });
-      }
-      
-      currentNode.connect(gainNodeRef.current);
-      gainNodeRef.current.connect(audioContextRef.current.destination);
+      // Connecter la chaîne audio initiale
+      connectAudioChain();
       
       setIsInitialized(true);
-      console.log('✅ Contexte audio initialisé');
+      console.log('✅ Contexte audio initialisé avec égaliseur');
     } catch (error) {
       console.error('❌ Erreur initialisation audio:', error);
     }
@@ -180,16 +199,26 @@ const WebAudioPlayer: React.FC<WebAudioPlayerProps> = ({
     }
   }, [volume, muted]);
 
+  // Reconnecter la chaîne audio quand l'égaliseur est activé/désactivé
+  useEffect(() => {
+    if (isInitialized) {
+      connectAudioChain();
+    }
+  }, [equalizerEnabled, isInitialized, connectAudioChain]);
+
   // Mettre à jour l'égaliseur
   useEffect(() => {
     if (equalizerNodesRef.current.length > 0 && audioContextRef.current) {
       equalizerBands.forEach((band, index) => {
         if (equalizerNodesRef.current[index]) {
           const filter = equalizerNodesRef.current[index];
+          // Appliquer le gain seulement si l'égaliseur est activé
+          const gainValue = equalizerEnabled ? band.gain : 0;
           filter.gain.setValueAtTime(
-            equalizerEnabled ? band.gain : 0,
+            gainValue,
             audioContextRef.current!.currentTime
           );
+          console.log(`🎚️ Bande ${index} (${band.frequency}Hz): ${gainValue}dB`);
         }
       });
     }
