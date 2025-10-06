@@ -42,7 +42,9 @@ import { formatTime } from '../utils/polyfills';
 import AudioExport from './AudioExport';
 import AudioPreview from './AudioPreview';
 import DetailedProgressBar, { ProgressStep } from './DetailedProgressBar';
-import AudioEqualizer, { EqualizerBand } from './AudioEqualizer';
+import SimpleEqualizer, { SimpleEqualizerBand } from './SimpleEqualizer';
+import WebAudioPlayer from './WebAudioPlayer';
+import AudioInstructions from './AudioInstructions';
 import { usePerformanceOptimization } from '../hooks/usePerformanceOptimization';
 import PerformanceMonitor from './PerformanceMonitor';
 
@@ -88,15 +90,12 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
   // États pour l'égaliseur
   const [muted, setMuted] = useState(false);
   const [equalizerEnabled, setEqualizerEnabled] = useState(false);
-  const [equalizerBands, setEqualizerBands] = useState<EqualizerBand[]>([
-    { frequency: 60, gain: 0, label: '60 Hz' },
-    { frequency: 170, gain: 0, label: '170 Hz' },
-    { frequency: 310, gain: 0, label: '310 Hz' },
-    { frequency: 600, gain: 0, label: '600 Hz' },
-    { frequency: 1000, gain: 0, label: '1 kHz' },
-    { frequency: 3000, gain: 0, label: '3 kHz' },
-    { frequency: 6000, gain: 0, label: '6 kHz' },
-    { frequency: 12000, gain: 0, label: '12 kHz' }
+  const [equalizerBands, setEqualizerBands] = useState<SimpleEqualizerBand[]>([
+    { frequency: 60, gain: 0, label: 'Basses' },
+    { frequency: 250, gain: 0, label: 'Graves' },
+    { frequency: 1000, gain: 0, label: 'Médiums' },
+    { frequency: 4000, gain: 0, label: 'Aigus' },
+    { frequency: 12000, gain: 0, label: 'Brillance' }
   ]);
 
   // Hook d'optimisation des performances
@@ -187,8 +186,16 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
     initWaveSurfer();
 
     return () => {
-      originalWaveSurferRef.current?.destroy();
-      transformedWaveSurferRef.current?.destroy();
+      try {
+        if (originalWaveSurferRef.current && !originalWaveSurferRef.current.isDestroyed) {
+          originalWaveSurferRef.current.destroy();
+        }
+        if (transformedWaveSurferRef.current && !transformedWaveSurferRef.current.isDestroyed) {
+          transformedWaveSurferRef.current.destroy();
+        }
+      } catch (error) {
+        console.warn('Erreur lors de la destruction de WaveSurfer:', error);
+      }
     };
   }, [audioFile]);
 
@@ -466,6 +473,14 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
         🎛️ Transformation Audio
       </Typography>
 
+      {/* Guide d'utilisation */}
+      <AudioInstructions
+        currentTab={tabValue}
+        onTabChange={setTabValue}
+        equalizerEnabled={equalizerEnabled}
+        hasAudioFile={!!audioFile}
+      />
+
       {/* Informations du fichier */}
       <Card sx={{ mb: 3, backgroundColor: 'primary.50' }}>
         <CardContent>
@@ -611,15 +626,27 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
 
           <TabPanel value={tabValue} index={0}>
             <Typography variant="h6" gutterBottom>
-              🎵 Prévisualisation Audio
+              🎵 Prévisualisation Audio avec Égaliseur
             </Typography>
             {audioFile && (
               <Grid container spacing={3}>
                 <Grid item xs={12}>
-                  <AudioPreview 
-                    audioFile={audioFile}
-                    title="Audio Original"
-                    subtitle="Écoutez votre fichier audio avant transformation"
+                  <WebAudioPlayer
+                    audioFile={audioFile.file}
+                    isPlaying={isPlaying}
+                    volume={volume}
+                    muted={muted}
+                    currentTime={currentTime}
+                    duration={duration}
+                    loading={false}
+                    equalizerBands={equalizerBands}
+                    equalizerEnabled={equalizerEnabled}
+                    onTimeUpdate={setCurrentTime}
+                    onDurationChange={setDuration}
+                    onLoadingChange={() => {}}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onSeek={setCurrentTime}
                   />
                 </Grid>
               </Grid>
@@ -630,15 +657,39 @@ const AudioProcessor: React.FC<AudioProcessorProps> = ({
             <Typography variant="h6" gutterBottom>
               🎛️ Contrôles Audio et Égaliseur
             </Typography>
-            <AudioEqualizer
+            
+            {/* Lecteur audio intégré */}
+            {audioFile && (
+              <Box sx={{ mb: 3 }}>
+                <WebAudioPlayer
+                  audioFile={audioFile.file}
+                  isPlaying={isPlaying}
+                  volume={volume}
+                  muted={muted}
+                  currentTime={currentTime}
+                  duration={duration}
+                  loading={false}
+                  equalizerBands={equalizerBands}
+                  equalizerEnabled={equalizerEnabled}
+                  onTimeUpdate={setCurrentTime}
+                  onDurationChange={setDuration}
+                  onLoadingChange={() => {}}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  onSeek={setCurrentTime}
+                />
+              </Box>
+            )}
+            
+            <SimpleEqualizer
+              enabled={equalizerEnabled}
+              onEnabledChange={setEqualizerEnabled}
+              bands={equalizerBands}
+              onBandsChange={setEqualizerBands}
               volume={volume * 100}
               onVolumeChange={(vol) => setVolume(vol / 100)}
               muted={muted}
               onMutedChange={setMuted}
-              equalizerBands={equalizerBands}
-              onEqualizerChange={setEqualizerBands}
-              equalizerEnabled={equalizerEnabled}
-              onEqualizerEnabledChange={setEqualizerEnabled}
             />
           </TabPanel>
 
